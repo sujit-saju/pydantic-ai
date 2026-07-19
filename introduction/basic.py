@@ -1,39 +1,12 @@
-import os
-
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.models.ollama import OllamaModel
+from pydantic_ai.providers.ollama import OllamaProvider
+import os
 
 load_dotenv()
-
-geminiModel = os.getenv("GEMINI_API_KEY")
-
-model = GoogleModel("gemini-2.5-pro")
-
-# --------------------------------------------------------------
-# 1. Simple Agent - Hello World Example
-# --------------------------------------------------------------
-
-# agent = Agent(
-#     "google:gemini-3.5-flash",
-#     instructions="You are a helpful assistant.",
-# )
-
-# result = agent.run_sync("How can I track my order #12345. I used Amazon.in")
-# print(result.output)
-
-# response2 = agent.run_sync(
-#     user_prompt="What was my previous question?",
-#     message_history=result.new_messages(),
-# )
-
-# print(response2.output)
-
-# --------------------------------------------------------------
-# 2. Agent with Structured Response
-# --------------------------------------------------------------
-
+ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 
 class ResponseModel(BaseModel):
     response: str
@@ -41,15 +14,21 @@ class ResponseModel(BaseModel):
     follow_up_required: bool
     sentiment: str = Field(description="Customer sentiment analysis")
 
-
-agent1 = Agent(
-    model=model,
-    output_type=ResponseModel,
-    system_prompt=(
-        "You are an intelligent customer support",
-        "Analyze queries carefully and provide structured responses.",
+model = OllamaModel(
+    model_name="qwen2.5:7b",
+    provider=OllamaProvider(
+        base_url=ollama_base_url,   # <-- NOTE THE /v1
     ),
 )
 
-response = agent1.run_sync("How can I track my amazon order #1234")
-print(response.data.model_dump_json(indent=2))
+agent = Agent(
+    model=model,
+    output_type=ResponseModel,
+    system_prompt="You are an intelligent customer support assistant.",
+)
+
+result = agent.run_sync(
+    "How can I track my Amazon order #1234?"
+)
+
+print(result.output)

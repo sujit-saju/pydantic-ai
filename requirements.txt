@@ -1,5 +1,5 @@
 pydantic>=2.0.0
-pydantic-ai>=0.1.0
-google-genai
+pydantic-ai-slim[openai]>=2.9.1
+ollama>=0.5.0
 python-dotenv>=1.0.0
 pytest>=7.0.0
